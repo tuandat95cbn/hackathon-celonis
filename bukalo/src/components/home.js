@@ -35,7 +35,8 @@ export default function Home() {
     if (column) setIsDisable(false)
     else setIsDisable(true)
   }, [column]);
-  React.useEffect(() => {
+
+  useEffect(() => {
     axios.get(API_URL + "table/columns")
       .then(function (response) {
         setCandidates(response.data);
@@ -43,7 +44,8 @@ export default function Home() {
       .catch(function (error) {
         console.log(error);
       });
-  }, [])
+  }, []);
+
   return (
     <div className={classes.box_center}>
       <Box sx={{
