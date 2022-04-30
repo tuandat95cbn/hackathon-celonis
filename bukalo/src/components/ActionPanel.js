@@ -28,11 +28,19 @@ export default function ActionPanel({setAction}) {
     setAggregate(event.target.value);
   };
   const handleClick = (event) => {
+    if (newColName != null && newColName !="" && newColName !=undefined)
     setAction({
       "table":table,
       "action":aggregate,
-      "column":column
+      "column":column,
+      "newName":newColName
     })
+    else {
+    setAction({
+      "table":table,
+      "action":aggregate,
+      "column":column,
+    })  }
     //setTable()
     //setAction()
     //setNewColName()
@@ -41,7 +49,7 @@ export default function ActionPanel({setAction}) {
     setNewColName(event.target.value);
   };
   React.useEffect(() => {
-    axios.get(API_URL + "table/columns")
+    axios.get(API_URL + "table/columns?type=all")
       .then(function (response) {
         setColumns(response.data);
       })

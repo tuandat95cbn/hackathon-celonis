@@ -29,10 +29,11 @@ export default function Clusters(historyCluster) {
     {id: 'numCase', label: 'Total Case', minWidth: 100},
   ]);
   const [actions, setActions] = React.useState([{
-        "table":"EKPO_parquet",
-        "column":"_CASE_KEY",
-        "action":""
-    }])
+    "table": "EKPO_parquet",
+    "column": "_CASE_KEY",
+    "action": ""
+  }])
+  const [mapColName, setMapColName] = React.useState()
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
   const [isLoading, setIsLoading] = React.useState(true)
@@ -61,8 +62,14 @@ export default function Clusters(historyCluster) {
   }, [])
 
   React.useEffect(() => {
-    console.log(actions)
     if (actions.length > 1) {
+      let map = {}
+      actions.forEach((act) => {
+        if (Object.hasOwn(act, "newName")) {
+          map[act["column"]] = act["newName"]
+        }
+      })
+      setMapColName(map)
       setIsLoading(true)
       let data = actions
       axios.post(API_URL + "table/add-column/" + location.state.column, data)
@@ -76,12 +83,18 @@ export default function Clusters(historyCluster) {
 
     }
   }, [actions])
+  const getColumnName = (col) => {
+    if (mapColName)
+      if (Object.hasOwn(mapColName, col))
+        return mapColName[col]
+    return col
+  }
   React.useEffect(() => {
     if (clusterData) {
       let cols = Object.keys(clusterData)
       cols.push("cluster")
       setColumns(cols.map((col) => {
-        return {id: col, label: col, minWidth: 100}
+        return {id: col, label: getColumnName(col), minWidth: 100}
       }))
       cols.pop()
       let l_rows = Object.keys(clusterData[cols[0]]).map((cluster) => {
@@ -96,7 +109,6 @@ export default function Clusters(historyCluster) {
         }
         return r
       })
-      console.log(l_rows)
       setRows(
         l_rows
       )
@@ -120,7 +132,6 @@ export default function Clusters(historyCluster) {
   ]);
 
   const addBreadcrumbs = (column) => {
-    console.log(column)
     let col = (
       <Link
         underline="hover"
