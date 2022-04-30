@@ -86,22 +86,23 @@ def get_second_cluster(selected_cluster_id):
 
 
 
-@server.route(URL + '/cluster-dfg', methods=['POST'])
-def get_cluster_dfg():
+@server.route(URL + '/cluster-ptree', methods=['GET'])
+def get_cluster_ptree():
     df = get_cluster_table()
     df.rename(columns={"_TIME": 'time:timestamp',
                              "_CASE": 'case:concept:name', "_ACT_EN": 'concept:name', "_USER": 'org:resource'},
                     inplace=True)
     log = pm.objects.conversion.log.converter.apply(df)
 
-    dfg = dfg_discovery.apply(log, variant=variants.native)
+    net, initial_marking, final_marking = pm.algo.discovery.inductive.algorithm.apply(log)
+    tree = pm.algo.discovery.inductive.algorithm.apply_tree(log)
 
-    net, im, fm = alpha_miner.apply(log)
-
-
-    gviz = pn_visualizer.apply(net, im, fm)
-    pn_visualizer.view(gviz)
-    return ""
+    gviz = pm.visualization.process_tree.visualizer.apply(tree)
+    # gviz.node_attr = {'color': 'blue'}
+    # gviz.edge_attr = {'color': 'blue', 'style': 'filled'}
+    gviz.render("./img/ptree")
+    pm.visualization.process_tree.visualizer.view(gviz)
+    return send_from_directory(filename="./img/ptree")
 
 
 @server.route(URL + '/cluster-table', methods=['POST'])
@@ -220,15 +221,21 @@ def get_cluster(col_name):
 
 @server.route('/table/columns', methods=['GET'])
 def get_col_by_name():
+    args = request.args
+    is_all=False
+    if args!=None and "type" in args and args["type"]=="all":
+        is_all=True
 
     data_model = CELONIS.datamodels.find(DATA_MODEL)
     tables = data_model.tables.find(ACTIVITY_TABLE)
 
     res = []
     for col in tables.columns:
-        if col['type'] == "STRING":
+        if not is_all:
+           if col['type'] == "STRING":
+                res.append(col['name'])
+        else:
             res.append(col['name'])
-
     response = server.response_class(
         response=json.dumps(res, sort_keys=False),
         status=200,
