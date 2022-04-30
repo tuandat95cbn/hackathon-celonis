@@ -73,9 +73,14 @@ def get_second_cluster(selected_cluster_id):
     drilldown_query += PQLFilter(f'FILTER {first_cluster} = {selected_cluster_id}')
     data_model = CELONIS.datamodels.find(DATA_MODEL)
     df = data_model._get_data_frame(drilldown_query)
-    df.to_csv(r"C:\Users\HOANG-ANH-MEED\Desktop\hack\cluster4.csv")
 
-    print(df)
+    response = server.response_class(
+        response=json.dumps(df.to_dict(), sort_keys=False),
+        status=200,
+        mimetype='application/json'
+    )
+    return response
+
 
     return ""
 
