@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, flash, redirect, url_for, send_from_directory
+from flask import Flask, render_template, request, flash, redirect, url_for, send_file
 import pandas as pd
 import os, pathlib
 import json
@@ -100,9 +100,11 @@ def get_cluster_ptree():
     gviz = pm.visualization.process_tree.visualizer.apply(tree)
     # gviz.node_attr = {'color': 'blue'}
     # gviz.edge_attr = {'color': 'blue', 'style': 'filled'}
-    gviz.render("./img/ptree")
+    file_path=os.path.join( "img", "tree")
+    gviz.render(file_path)
     pm.visualization.process_tree.visualizer.view(gviz)
-    return send_from_directory(filename="./img/ptree")
+    file_path = os.path.join("img", "tree.png")
+    return send_file(file_path, mimetype='image/png')
 
 
 @server.route(URL + '/cluster-table', methods=['POST'])
