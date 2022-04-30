@@ -13,7 +13,8 @@ from pycelonis import get_celonis
 from pycelonis.celonis_api.pql.pql import PQL, PQLColumn, PQLFilter
 from pm4py.algo.discovery.alpha import algorithm as alpha_miner
 from pm4py.visualization.petri_net import visualizer as pn_visualizer
-
+from pm4py.statistics.traces.generic.log import case_statistics
+from pm4py.algo.filtering.log.variants import variants_filter
 URL = ""
 CEL_URL = "academic-hieu-le-rwth-aachen-de.eu-2.celonis.cloud"
 TOKEN = "MjQ5MjcyNTgtZDc0Yi00MTFiLTg4ZWEtNmMyMGM1NTgxY2FlOmpUNytpZFo5RE9QTHQ4Ui94YnZpSEY3eFNyNzEzQ0x5dUN0YTd1b0hvYmx5"
@@ -36,20 +37,139 @@ server = Flask(__name__)
 CORS(server)
 
 
+# @server.route(URL + '/stat/case-per-cluster', methods=['GET'])
+# def get_case_per_cluster():
+#     a = PQL()
+#     a += PQLColumn(case_table_case, "case_id")
+#     a += PQLColumn(f'VARIANT ( {activity_table_activity} )', "variant")
+#     a += PQLColumn(
+#         f'CLUSTER_VARIANTS ( VARIANT ( {activity_table_activity} ), 2, 2 ) ', "cluster_id"
+#     )
+#     data_model = CELONIS.datamodels.find(DATA_MODEL)
+#     df = data_model._get_data_frame(cluster_per_case)
+#     df.to_csv(r"C:\Users\HOANG-ANH-MEED\Desktop\hack\cluster4.csv")
+#     return ""
+
+
 @server.route(URL + '/test', methods=['GET'])
 def test():
-    cluster_per_case = PQL()
-    cluster_per_case += PQLColumn(case_table_case, "case_id")
-    cluster_per_case += PQLColumn(f'VARIANT ( {activity_table_activity} )', "variant")
-    cluster_per_case += PQLColumn(
-        f'CLUSTER_VARIANTS ( VARIANT ( {activity_table_activity} ), 2, 2 ) ', "cluster_id"
-    )
+    a = PQL()
+    a += PQLColumn(f"ESTIMATE_CLUSTER_PARAMS ( VARIANT ( {activity_table_activity} ), 3, 5, 3 )")
     data_model = CELONIS.datamodels.find(DATA_MODEL)
-    df = data_model._get_data_frame(cluster_per_case)
-    df.to_csv(r"C:\Users\HOANG-ANH-MEED\Desktop\hack\cluster4.csv")
+    df = data_model._get_data_frame(a)
+    df.to_csv(r"C:\Users\HOANG-ANH-MEED\Desktop\hack\cluster5.csv")
     return ""
 
 
+@server.route(URL + '/stat/basic', methods=['POST'])
+def get_basic_stat():
+    df = get_cluster_table()
+    df.rename(columns={"_TIME": 'time:timestamp',
+                       "_CASE": 'case:concept:name', "_ACT_EN": 'concept:name', "_USER": 'org:resource'},
+              inplace=True)
+    log = pm.objects.conversion.log.converter.apply(df)
+    ev = len(df)
+    ca = len(log)
+    va = len(case_statistics.get_variant_statistics(log))
+
+    return {"cases": ca, "variants": va, "events": ev}
+
+
+
+
+@server.route(URL + '/stat/most-com-var', methods=['POST'])
+def get_most_common_var():
+    df = get_cluster_table()
+    df.rename(columns={"_TIME": 'time:timestamp',
+                       "_CASE": 'case:concept:name', "_ACT_EN": 'concept:name', "_USER": 'org:resource'},
+              inplace=True)
+    log = pm.objects.conversion.log.converter.apply(df)
+
+    variants = variants_filter.get_variants(log)
+    mo_var = variants_filter.filter_log_variants_percentage(log, percentage=0)
+    d = ""
+    for key in variants:
+        if mo_var[0] in variants[key]:
+            d = key
+    variants_count = case_statistics.get_variant_statistics(log)
+    gg = 0;
+    for i in variants_count:
+        if i['variant'] == d:
+            gg = i['count']
+    return {"variant": d.split(","), "count": gg}
+
+
+@server.route(URL + '/stat/throughput', methods=['POST'])
+def get_throughput_time():
+    cases = request.get_json()
+    throughput_per_cluster = PQL()
+    throughput_per_cluster += PQLColumn(
+        f'{case_table_case}', "case_ID"
+    )
+    throughput_per_cluster += PQLColumn(
+        f'AVG ('
+        f'  CALC_THROUGHPUT ( '
+        f'      CASE_START TO CASE_END, '
+        f'      REMAP_TIMESTAMPS ( {activity_table_timestamp}, MINUTES ) '
+        f'  ) '
+        f')',
+        "avg_throughput_time"
+    )
+    q_cases = f'FILTER {CASE_TABLE}."_CASE_KEY" IN ('
+    for i in range(0, len(cases)):
+        if i == len(cases) - 1:
+            q_cases += "'"
+            q_cases += cases[i]
+            q_cases += "'"
+        else:
+            q_cases += "'"
+            q_cases += cases[i]
+            q_cases += "'"
+            q_cases += ','
+    q_cases += ');'
+    throughput_per_cluster += PQLFilter(q_cases)
+    data_model = CELONIS.datamodels.find(DATA_MODEL)
+    df = data_model._get_data_frame(throughput_per_cluster)
+
+    response = server.response_class(
+        response=json.dumps(df.to_dict(), sort_keys=False),
+        status=200,
+        mimetype='application/json'
+    )
+    return response
+
+
+
+@server.route(URL + '/table/cluster/<col_name>', methods=['GET'])
+def get_cluster(col_name):
+    query = PQL()
+    data_model = CELONIS.datamodels.find(DATA_MODEL)
+    column1 = PQLColumn(query='"' + CASE_TABLE + '"."_CASE_KEY"', name='Case_ID')
+    column2 = PQLColumn(query='CLUSTER_VARIANTS ( VARIANT ("' + ACTIVITY_TABLE + '"."' + col_name + '" ), 211132 , 3 )',
+                        name="cluster")
+
+    query += column1
+    query += column2
+
+    df = data_model._get_data_frame(query)
+    grouped = df.groupby("cluster")
+
+    def f(a):
+        l = []
+        for i in a:
+            l.append(i)
+        return l
+
+    x = grouped.agg(f)
+    x.to_csv(r"C:\Users\HOANG-ANH-MEED\Desktop\hack\cluster6.csv")
+    print(x.index)
+
+    response = server.response_class(
+        response=json.dumps(x.to_dict(), sort_keys=False),
+        status=200,
+        mimetype='application/json'
+    )
+    return response
 
 
 @server.route(URL + '/cluster-further/<selected_cluster_id>', methods=['GET'])
@@ -79,8 +199,6 @@ def get_second_cluster(selected_cluster_id):
         status=200,
         mimetype='application/json'
     )
-    return response
-
 
     return ""
 
@@ -191,34 +309,7 @@ def add_column(cluster_column):
     return response
 
 
-@server.route(URL + '/table/cluster/<col_name>', methods=['GET'])
-def get_cluster(col_name):
-    query = PQL()
-    data_model = CELONIS.datamodels.find(DATA_MODEL)
-    column1 = PQLColumn(query='"' + CASE_TABLE + '"."_CASE_KEY"', name='Case_ID')
-    column2 = PQLColumn(query='CLUSTER_VARIANTS ( VARIANT ("' + ACTIVITY_TABLE + '"."' + col_name + '" ), 2 , 2 )',
-                        name="cluster")
 
-    query += column1
-    query += column2
-
-    df = data_model._get_data_frame(query)
-    grouped = df.groupby("cluster")
-
-    def f(a):
-        l = []
-        for i in a:
-            l.append(i)
-        return l
-
-    x = grouped.agg(f)
-    print(x.index)
-    response = server.response_class(
-        response=json.dumps(x.to_dict(), sort_keys=False),
-        status=200,
-        mimetype='application/json'
-    )
-    return response
 
 
 @server.route('/table/columns', methods=['GET'])
