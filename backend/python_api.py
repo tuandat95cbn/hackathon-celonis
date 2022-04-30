@@ -51,27 +51,42 @@ def test():
 
 
 
+@server.route(URL + '/cluster-further/<column_name>', methods=['POST'])
+def get_second_cluster(column_name):
+    cluster_hira=request.get_json()
+    cluster_querys=[]
+    activities_selected_queries=[]
+    activities_query = f'''
+        CASE WHEN '''
+    first=True
+    for cluster in cluster_hira:
+        if first:
+            first=False
+        else:
+            activities_query+=" AND "
+        table_col_name='"'+ACTIVITY_TABLE+'".'+'"'+cluster['column']+'"'
+        cluster_q = f'CLUSTER_VARIANTS( VARIANT ( {table_col_name} ), 2, 2 ) '
 
-@server.route(URL + '/cluster-further/<selected_cluster_id>', methods=['GET'])
-def get_second_cluster(selected_cluster_id):
-    first_cluster = f'CLUSTER_VARIANTS( VARIANT ( {activity_table_activity} ), 2, 2 ) '
-    activities_for_the_selected_cluster = f'''
-      CASE WHEN
-        {first_cluster} = {selected_cluster_id}
-      THEN
-        {activity_table_activity}
+        activities_query+=f"{cluster_q} = {cluster['cluster_id']}"
+        cluster_querys.append(cluster_q)
+    activities_query+=f'''
+        THEN
+        {'"'+ACTIVITY_TABLE+'".'+'"'+column_name+'"'}
       ELSE
         NULL
       END
     '''
     drilldown_query = PQL()
     drilldown_query += PQLColumn(case_table_case, "case_id")
-    drilldown_query += PQLColumn(f'VARIANT ( {activities_for_the_selected_cluster} )', "variant")
-    drilldown_query += PQLColumn(f'{first_cluster}', "cluster_1")
-    drilldown_query += PQLColumn(f'CLUSTER_VARIANTS ( VARIANT ( {activities_for_the_selected_cluster} ) , 2, 2)',
+    drilldown_query += PQLColumn(f'VARIANT ( {activities_query} )', "variant")
+    for i in range(len(cluster_querys)):
+        drilldown_query += PQLColumn(f'{cluster_querys[i]}', "cluster_"+str(i))
+    drilldown_query += PQLColumn(f'CLUSTER_VARIANTS ( VARIANT ( {activities_query} ) , 2, 2)',
                                  "cluster_")
-    drilldown_query += PQLFilter(f'FILTER {first_cluster} = {selected_cluster_id}')
+    for i in range(len(cluster_querys)):
+        drilldown_query += PQLFilter(f'FILTER {cluster_querys[i]} = {cluster_hira[i]["cluster_id"]};')
     data_model = CELONIS.datamodels.find(DATA_MODEL)
+    print(drilldown_query.query)
     df = data_model._get_data_frame(drilldown_query)
 
     response = server.response_class(
