@@ -7,6 +7,8 @@ import {
 } from "react-router-dom";
 import Home from "./components/home";
 import Clusters from "./components/clusters";
+import FurtherClustering from './components/FurtherClustering';
+import ClusterDetail from './components/ClusterDetail';
 
 function App() {
   return (
@@ -14,6 +16,7 @@ function App() {
       <Routes>
       <Route exact  path="/" element={<Home />} />
       <Route path="cluster" element={<Clusters />} />
+      <Route path="test" element={<ClusterDetail />} />
     </Routes>
     </BrowserRouter>
   );
