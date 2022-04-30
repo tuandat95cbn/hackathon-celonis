@@ -48,7 +48,7 @@ const FurtherClustering = () => {
                 </Select>
             </Grid>
             <Grid container item xs={4} justifyContent={'center'}>
-                <Button disabled={isButtonDisable} onClick={handleClick}>Cluster</Button>
+                <Button disabled={isButtonDisable} variant="contained" color="primary" onClick={handleClick}>Cluster</Button>
             </Grid>
         </Grid>
     )
