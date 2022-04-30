@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, flash, redirect, url_for, sen
 import pandas as pd
 import os, pathlib
 import json
+from flask_cors import CORS
 
 from pm4py.objects.conversion.log import converter as log_conversion
 import sys
@@ -21,13 +22,13 @@ CELONIS = get_celonis(url=CEL_URL,
     key_type='USER_KEY')
 
 server = Flask(__name__)
-
+CORS(server)
 
 @server.route(URL + '/table/cluster/<col_name>', methods=['GET'])
 def get_cluster(col_name):
     query = PQL()
     data_model = CELONIS.datamodels.find(DATA_MODEL)
-    column1 = PQLColumn(query='"' + CASE_TABLE + '"."_CASE_KEY"', name='Case ID')
+    column1 = PQLColumn(query='"' + CASE_TABLE + '"."_CASE_KEY"', name='Case_ID')
     column2 = PQLColumn(query='CLUSTER_VARIANTS ( VARIANT ("' + ACTIVITY_TABLE + '"."' + col_name + '" ), 2 , 2 )',
                         name="cluster")
 
@@ -44,6 +45,7 @@ def get_cluster(col_name):
         return l
 
     x = grouped.agg(f)
+    print(x.index)
     response = server.response_class(
         response=json.dumps(x.to_dict(), sort_keys=False),
         status=200,
