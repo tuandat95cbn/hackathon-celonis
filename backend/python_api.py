@@ -45,7 +45,7 @@ def get_cluster(col_name):
 
     x = grouped.agg(f)
     response = server.response_class(
-        response=json.dumps(x, sort_keys=False),
+        response=json.dumps(x.to_dict(), sort_keys=False),
         status=200,
         mimetype='application/json'
     )
