@@ -15,22 +15,27 @@ import ActionPanel from "./ActionPanel"
 import axios from 'axios';
 import {useLocation} from 'react-router-dom';
 import {API_URL} from '../constant'
-import { CircularProgress } from '@material-ui/core'
+import {CircularProgress} from '@material-ui/core'
 import ClusterDetail from './ClusterDetail';
 import FurtherClustering from './FurtherClustering';
 
-const columns = [
-  {id: 'cluster', label: 'Cluster', minWidth: 170},
-  {id: 'numCase', label: 'Total Case', minWidth: 100},
-];
 
 
 export default function Clusters(historyCluster) {
   const location = useLocation();
 
+  const [columns, setColumns] = React.useState([
+    {id: 'cluster', label: 'Cluster', minWidth: 170},
+    {id: 'numCase', label: 'Total Case', minWidth: 100},
+  ]);
+  const [actions, setActions] = React.useState([{
+        "table":"EKPO_parquet",
+        "column":"_CASE_KEY",
+        "action":""
+    }])
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
-  const [isLoading,setIsLoading]= React.useState(true)
+  const [isLoading, setIsLoading] = React.useState(true)
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -47,7 +52,7 @@ export default function Clusters(historyCluster) {
     axios.get(API_URL + "table/cluster/" + location.state.column)
       .then(function (response) {
         addBreadcrumbs(location.state.column)
-        setClusterData(response.data["Case_ID"]);
+        setClusterData(response.data);
         setIsLoading(false)
       })
       .catch(function (error) {
@@ -56,106 +61,148 @@ export default function Clusters(historyCluster) {
   }, [])
 
   React.useEffect(() => {
-    if (clusterData)
-      setRows(Object.keys(clusterData).map((key) => {
-        return {"cluster": key, "numCase": clusterData[key].length}
-      }));
+    console.log(actions)
+    if (actions.length > 1) {
+      setIsLoading(true)
+      let data = actions
+      axios.post(API_URL + "table/add-column/" + location.state.column, data)
+        .then(function (response) {
+          setClusterData(response.data);
+          setIsLoading(false)
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
 
+    }
+  }, [actions])
+  React.useEffect(() => {
+    if (clusterData) {
+      let cols = Object.keys(clusterData)
+      cols.push("cluster")
+      setColumns(cols.map((col) => {
+        return {id: col, label: col, minWidth: 100}
+      }))
+      cols.pop()
+      let l_rows = Object.keys(clusterData[cols[0]]).map((cluster) => {
+        const r = {
+          "cluster": cluster,
+        }
+        r[cols[0]] = clusterData[cols[0]][cluster]
+        for (let i = 0; i < cols.length; i++) {
+          if (Array.isArray(clusterData[cols[i]][cluster]))
+            r[cols[i]] = new Set(clusterData[cols[i]][cluster]).size
+          else r[cols[i]] = clusterData[cols[i]][cluster]
+        }
+        return r
+      })
+      console.log(l_rows)
+      setRows(
+        l_rows
+      )
+        //setRows(Object.keys(clusterData).map((key) => {
+        //  return {"cluster": key, "numCase": clusterData[key].length}
+        //}
+        ;
+    }
   }, [clusterData])
   const handleClick = (url) => {
     console.log(url)
 
   }
-  const [breadcrumbs, setBreadcrumbs] =React.useState( [
+  const handleAddAction = (action) => {
+    setActions(prev => [...prev, action])
+  }
+  const [breadcrumbs, setBreadcrumbs] = React.useState([
     <Link underline="hover" key="1" color="inherit" href="/" onClick={handleClick("/")}>
       Start
     </Link>,
   ]);
 
-  const addBreadcrumbs=(column)=>{
+  const addBreadcrumbs = (column) => {
     console.log(column)
-    let col=(
-          <Link
-      underline="hover"
-      key={breadcrumbs.length}
-      color="inherit"
-      href={"/"+column}
-      onClick={handleClick("/"+column)}
-    >
-      {column}
-    </Link>
+    let col = (
+      <Link
+        underline="hover"
+        key={breadcrumbs.length}
+        color="inherit"
+        href={"/" + column}
+        onClick={handleClick("/" + column)}
+      >
+        {column}
+      </Link>
     );
-    setBreadcrumbs(prev=>[...prev,col])
+    setBreadcrumbs(prev => [...prev, col])
   }
   if (isLoading) return (
-    <div style={{ 'width': "100%", "textAlign": 'center', marginTop: 30 }}>
-              <CircularProgress />
-              <Typography variant='subtitle1' >Processing ...</Typography>
-            </div>
+    <div style={{'width': "100%", "textAlign": 'center', marginTop: 30}}>
+      <CircularProgress />
+      <Typography variant='subtitle1' >Processing ...</Typography>
+    </div>
   );
   else
-  return (
-    <Grid container spacing={2}>
-      <Grid item xs={6} md={8}>
-        <Grid item xs={12} md={12}>
-          <CustomizedBreadcrumbs breadcrumbs={breadcrumbs} />
+    return (
+      <Grid container spacing={2}>
+        <Grid item xs={6} md={8}>
+          <Grid item xs={12} md={12}>
+            <CustomizedBreadcrumbs breadcrumbs={breadcrumbs} />
+          </Grid>
+          <Grid item xs={12} md={12}>
+            <ActionPanel setAction={handleAddAction} />
+          </Grid>
+          <Paper sx={{width: '100%', overflow: 'hidden'}}>
+            <TableContainer sx={{maxHeight: 440}}>
+              <Table stickyHeader aria-label="sticky table">
+                <TableHead>
+                  <TableRow>
+                    {columns.map((column) => (
+                      <TableCell
+                        key={column.id}
+                        align={column.align}
+                        style={{minWidth: column.minWidth}}
+                      >
+                        {column.label}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {rows
+                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                    .map((row) => {
+                      return (
+                        <TableRow hover role="checkbox" tabIndex={-1} key={row.code}>
+                          {columns.map((column) => {
+                            const value = row[column.id];
+                            return (
+                              <TableCell key={column.id} align={column.align}>
+                                {column.format && typeof value === 'number'
+                                  ? column.format(value)
+                                  : value}
+                              </TableCell>
+                            );
+                          })}
+                        </TableRow>
+                      );
+                    })}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            <TablePagination
+              rowsPerPageOptions={[10, 25, 100]}
+              component="div"
+              count={rows.length}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              onPageChange={handleChangePage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+            />
+          </Paper>
         </Grid>
-        <Grid item xs={12} md={12}>
-          <ActionPanel />
+        <Grid item xs={4} md={4}>
+          <ClusterDetail />
+          <FurtherClustering />
         </Grid>
-        <Paper sx={{width: '100%', overflow: 'hidden'}}>
-          <TableContainer sx={{maxHeight: 440}}>
-            <Table stickyHeader aria-label="sticky table">
-              <TableHead>
-                <TableRow>
-                  {columns.map((column) => (
-                    <TableCell
-                      key={column.id}
-                      align={column.align}
-                      style={{minWidth: column.minWidth}}
-                    >
-                      {column.label}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {rows
-                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                  .map((row) => {
-                    return (
-                      <TableRow hover role="checkbox" tabIndex={-1} key={row.code}>
-                        {columns.map((column) => {
-                          const value = row[column.id];
-                          return (
-                            <TableCell key={column.id} align={column.align}>
-                              {column.format && typeof value === 'number'
-                                ? column.format(value)
-                                : value}
-                            </TableCell>
-                          );
-                        })}
-                      </TableRow>
-                    );
-                  })}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <TablePagination
-            rowsPerPageOptions={[10, 25, 100]}
-            component="div"
-            count={rows.length}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-          />
-        </Paper>
       </Grid>
-      <Grid item xs={4} md={4}>
-      <ClusterDetail/>
-      <FurtherClustering/>
-      </Grid>
-    </Grid>
-  );
+    );
 }
