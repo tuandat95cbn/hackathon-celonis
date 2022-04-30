@@ -3,12 +3,16 @@ import pandas as pd
 import os, pathlib
 import json
 from flask_cors import CORS
-
+import pm4py as pm
+from pm4py.algo.discovery.dfg import algorithm as dfg_discovery
+from pm4py.algo.discovery.dfg import variants
 from pm4py.objects.conversion.log import converter as log_conversion
 import sys
 import requests
 from pycelonis import get_celonis
-from pycelonis.celonis_api.pql.pql import PQL, PQLColumn
+from pycelonis.celonis_api.pql.pql import PQL, PQLColumn, PQLFilter
+from pm4py.algo.discovery.alpha import algorithm as alpha_miner
+from pm4py.visualization.petri_net import visualizer as pn_visualizer
 
 URL = ""
 CEL_URL = "academic-hieu-le-rwth-aachen-de.eu-2.celonis.cloud"
@@ -17,12 +21,136 @@ DATA_POOL = "Hackathon"
 DATA_MODEL = "SAP P2P"
 ACTIVITY_TABLE = "_CEL_P2P_ACTIVITIES_EN_parquet"
 CASE_TABLE = "EKPO_parquet"
+
+case_table_case = '"EKPO_parquet"."_CASE_KEY"'
+activity_table_case = '"_CEL_P2P_ACTIVITIES_EN_parquet"."_CASE_KEY"'
+activity_table_activity = '"_CEL_P2P_ACTIVITIES_EN_parquet"."ACTIVITY_EN"'
+activity_table_timestamp = '"_CEL_P2P_ACTIVITIES_EN_parquet"."EVENTTIME"'
+activity_table_user_type = '"_CEL_P2P_ACTIVITIES_EN_parquet"."USER_TYPE"'
+
 CELONIS = get_celonis(url=CEL_URL,
     api_token=TOKEN,
     key_type='USER_KEY')
 
 server = Flask(__name__)
 CORS(server)
+
+
+@server.route(URL + '/test', methods=['GET'])
+def test():
+    cluster_per_case = PQL()
+    cluster_per_case += PQLColumn(case_table_case, "case_id")
+    cluster_per_case += PQLColumn(f'VARIANT ( {activity_table_activity} )', "variant")
+    cluster_per_case += PQLColumn(
+        f'CLUSTER_VARIANTS ( VARIANT ( {activity_table_activity} ), 2, 2 ) ', "cluster_id"
+    )
+    data_model = CELONIS.datamodels.find(DATA_MODEL)
+    df = data_model._get_data_frame(cluster_per_case)
+    df.to_csv(r"C:\Users\HOANG-ANH-MEED\Desktop\hack\cluster4.csv")
+    return ""
+
+
+
+@server.route(URL + '/cluster-further/<column_name>', methods=['POST'])
+def get_second_cluster(column_name):
+    cluster_hira=request.get_json()
+    cluster_querys=[]
+    activities_selected_queries=[]
+    activities_query = f'''
+        CASE WHEN '''
+    first=True
+    for cluster in cluster_hira:
+        if first:
+            first=False
+        else:
+            activities_query+=" AND "
+        table_col_name='"'+ACTIVITY_TABLE+'".'+'"'+cluster['column']+'"'
+        cluster_q = f'CLUSTER_VARIANTS( VARIANT ( {table_col_name} ), 2, 2 ) '
+
+        activities_query+=f"{cluster_q} = {cluster['cluster_id']}"
+        cluster_querys.append(cluster_q)
+    activities_query+=f'''
+        THEN
+        {'"'+ACTIVITY_TABLE+'".'+'"'+column_name+'"'}
+      ELSE
+        NULL
+      END
+    '''
+    drilldown_query = PQL()
+    drilldown_query += PQLColumn(case_table_case, "case_id")
+    drilldown_query += PQLColumn(f'VARIANT ( {activities_query} )', "variant")
+    for i in range(len(cluster_querys)):
+        drilldown_query += PQLColumn(f'{cluster_querys[i]}', "cluster_"+str(i))
+    drilldown_query += PQLColumn(f'CLUSTER_VARIANTS ( VARIANT ( {activities_query} ) , 2, 2)',
+                                 "cluster_")
+    for i in range(len(cluster_querys)):
+        drilldown_query += PQLFilter(f'FILTER {cluster_querys[i]} = {cluster_hira[i]["cluster_id"]};')
+    data_model = CELONIS.datamodels.find(DATA_MODEL)
+    print(drilldown_query.query)
+    df = data_model._get_data_frame(drilldown_query)
+
+    response = server.response_class(
+        response=json.dumps(df.to_dict(), sort_keys=False),
+        status=200,
+        mimetype='application/json'
+    )
+    return response
+
+
+    return ""
+
+
+
+@server.route(URL + '/cluster-ptree', methods=['GET'])
+def get_cluster_ptree():
+    df = get_cluster_table()
+    df.rename(columns={"_TIME": 'time:timestamp',
+                             "_CASE": 'case:concept:name', "_ACT_EN": 'concept:name', "_USER": 'org:resource'},
+                    inplace=True)
+    log = pm.objects.conversion.log.converter.apply(df)
+
+    net, initial_marking, final_marking = pm.algo.discovery.inductive.algorithm.apply(log)
+    tree = pm.algo.discovery.inductive.algorithm.apply_tree(log)
+
+    gviz = pm.visualization.process_tree.visualizer.apply(tree)
+    # gviz.node_attr = {'color': 'blue'}
+    # gviz.edge_attr = {'color': 'blue', 'style': 'filled'}
+    gviz.render("./img/ptree")
+    pm.visualization.process_tree.visualizer.view(gviz)
+    return send_from_directory(filename="./img/ptree")
+
+
+@server.route(URL + '/cluster-table', methods=['POST'])
+def get_cluster_table():
+    cases = request.get_json()
+    q_cases = f'FILTER {ACTIVITY_TABLE}."_CASE_KEY" IN ('
+    for i in range(0, len(cases)):
+        if i == len(cases) - 1:
+            q_cases += "'"
+            q_cases += cases[i]
+            q_cases += "'"
+        else:
+            q_cases += "'"
+            q_cases += cases[i]
+            q_cases += "'"
+            q_cases += ','
+    q_cases += ');'
+    query = PQL()
+    fi = PQLFilter(q_cases)
+    col1 = PQLColumn(activity_table_case, "_CASE")
+    col2 = PQLColumn(activity_table_activity, "_ACT_EN")
+    col3 = PQLColumn(activity_table_timestamp, "_TIME")
+    col4 = PQLColumn(activity_table_user_type, "_USER")
+    query += col1
+    query += col2
+    query += col3
+    query += col4
+    query += fi
+
+    data_model = CELONIS.datamodels.find(DATA_MODEL)
+    df = data_model._get_data_frame(query)
+
+    return df
 
 @server.route(URL + '/table/add-column/<cluster_column>', methods=['POST'])
 def add_column(cluster_column):
@@ -75,6 +203,7 @@ def add_column(cluster_column):
     )
     return response
 
+
 @server.route(URL + '/table/cluster/<col_name>', methods=['GET'])
 def get_cluster(col_name):
     query = PQL()
@@ -107,15 +236,21 @@ def get_cluster(col_name):
 
 @server.route('/table/columns', methods=['GET'])
 def get_col_by_name():
+    args = request.args
+    is_all=False
+    if args!=None and "type" in args and args["type"]=="all":
+        is_all=True
 
     data_model = CELONIS.datamodels.find(DATA_MODEL)
     tables = data_model.tables.find(ACTIVITY_TABLE)
 
     res = []
     for col in tables.columns:
-        if col['type'] == "STRING":
+        if not is_all:
+           if col['type'] == "STRING":
+                res.append(col['name'])
+        else:
             res.append(col['name'])
-
     response = server.response_class(
         response=json.dumps(res, sort_keys=False),
         status=200,
