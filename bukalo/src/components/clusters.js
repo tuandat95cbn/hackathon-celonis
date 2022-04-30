@@ -7,58 +7,48 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
-import {Grid} from '@mui/material';
+import {Breadcrumbs, Grid, Stack} from '@mui/material';
+import Typography from '@mui/material/Typography';
+import Link from '@mui/material/Link';
+import CustomizedBreadcrumbs from "./CustomizedBreadcumbs"
+import ActionPanel from "./ActionPanel"
 
 const columns = [
-  { id: 'name', label: 'Name', minWidth: 170 },
-  { id: 'code', label: 'ISO\u00a0Code', minWidth: 100 },
-  {
-    id: 'population',
-    label: 'Population',
-    minWidth: 170,
-    align: 'right',
-    format: (value) => value.toLocaleString('en-US'),
-  },
-  {
-    id: 'size',
-    label: 'Size\u00a0(km\u00b2)',
-    minWidth: 170,
-    align: 'right',
-    format: (value) => value.toLocaleString('en-US'),
-  },
-  {
-    id: 'density',
-    label: 'Density',
-    minWidth: 170,
-    align: 'right',
-    format: (value) => value.toFixed(2),
-  },
+  {id: 'cluster', label: 'Cluster', minWidth: 170},
+  {id: 'numCase', label: 'Total Case', minWidth: 100},
 ];
 
-function createData(name, code, population, size) {
-  const density = population / size;
-  return { name, code, population, size, density };
+const clusterData = {
+  "cluster_1": ["800000001732200000.00", "800000001732100000.00", "800000001732100000.00"],
+  "cluster_2": ["800000001732100000.00",
+    , "800000001732100000.00"
+    , "800000001732100000.00"
+    , "800000001732100000.00"
+    , "800000001732100000.00"
+    , "800000001732100000.00"],
+  "cluster_3": ["800000001732100000.00"
+    , "800000001732100000.00"
+    , "800000001732100000.00"
+    , "800000001732100000.00"
+    , "800000001732100000.00"
+    , "800000001732100000.00"
+    , "800000001732100000.00"
+    , "800000001732100000.00"
+    , "800000001732100000.00"
+    , "800000001732100000.00"
+    , "800000001732100000.00"
+    , "800000001732100000.00"
+    , "800000001732100000.00"
+    , "800000001732100000.00"]
+
 }
+const rows = Object.keys(clusterData).map((key)=>{
+  return {"cluster":key,"numCase": clusterData[key].length}
+}) ;
 
-const rows = [
-  createData('India', 'IN', 1324171354, 3287263),
-  createData('China', 'CN', 1403500365, 9596961),
-  createData('Italy', 'IT', 60483973, 301340),
-  createData('United States', 'US', 327167434, 9833520),
-  createData('Canada', 'CA', 37602103, 9984670),
-  createData('Australia', 'AU', 25475400, 7692024),
-  createData('Germany', 'DE', 83019200, 357578),
-  createData('Ireland', 'IE', 4857000, 70273),
-  createData('Mexico', 'MX', 126577691, 1972550),
-  createData('Japan', 'JP', 126317000, 377973),
-  createData('France', 'FR', 67022000, 640679),
-  createData('United Kingdom', 'GB', 67545757, 242495),
-  createData('Russia', 'RU', 146793744, 17098246),
-  createData('Nigeria', 'NG', 200962417, 923768),
-  createData('Brazil', 'BR', 210147125, 8515767),
-];
-
-export default function Clusters() {
+console.log(rows)
+export default function Clusters(historyCluster) {
+  console.log(historyCluster)
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
@@ -71,21 +61,39 @@ export default function Clusters() {
     setPage(0);
   };
 
+  const handleClick = (url) => {
+    console.log(url)
+
+  }
+  const breadcrumbs = [
+    <Link underline="hover" key="1" color="inherit" href="/" onClick={handleClick("/")}>
+      Start
+    </Link>,
+    <Link
+      underline="hover"
+      key="2"
+      color="inherit"
+      href="/material-ui/getting-started/installation/"
+      onClick={handleClick("/1")}
+    >
+      Core
+    </Link>,
+    <Typography key="3" color="text.primary">
+      Breadcrumb
+    </Typography>,
+  ];
+
   return (
     <Grid container spacing={2}>
-      <Grid item xs={12} md={12}>
-        <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-            This is for breachume
-        </Paper>
-      </Grid>
-      <Grid item xs={12} md={12}>
-        <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-           Action
-        </Paper>
-      </Grid>
       <Grid item xs={6} md={8}>
-        <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-          <TableContainer sx={{ maxHeight: 440 }}>
+      <Grid item xs={12} md={12}>
+        <CustomizedBreadcrumbs breadcrumbs={breadcrumbs} />
+      </Grid>
+      <Grid item xs={12} md={12}>
+        <ActionPanel/>
+      </Grid>
+        <Paper sx={{width: '100%', overflow: 'hidden'}}>
+          <TableContainer sx={{maxHeight: 440}}>
             <Table stickyHeader aria-label="sticky table">
               <TableHead>
                 <TableRow>
@@ -93,7 +101,7 @@ export default function Clusters() {
                     <TableCell
                       key={column.id}
                       align={column.align}
-                      style={{ minWidth: column.minWidth }}
+                      style={{minWidth: column.minWidth}}
                     >
                       {column.label}
                     </TableCell>
@@ -134,7 +142,7 @@ export default function Clusters() {
         </Paper>
       </Grid>
       <Grid item xs={4} md={4}>
-      Neeu neeue
+        Neeu neeue
       </Grid>
     </Grid>
   );
