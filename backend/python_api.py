@@ -24,6 +24,57 @@ CELONIS = get_celonis(url=CEL_URL,
 server = Flask(__name__)
 CORS(server)
 
+@server.route(URL + '/table/add-column/<cluster_column>', methods=['POST'])
+def add_column(cluster_column):
+    json_list=request.get_json()
+    column_queries = []
+    column2 = PQLColumn(
+        query='CLUSTER_VARIANTS ( VARIANT ("' + ACTIVITY_TABLE + '"."' + cluster_column + '" ), 2 , 2 )',
+        name="cluster")
+    column_queries.append(column2)
+    for js in json_list:
+        table = js['table']
+        column = js['column']
+        action = js['action']
+        if action == "agg":
+            column3 = PQLColumn(
+                query='PU_STRING_AGG ( "' + CASE_TABLE + '", "' + table + '"."' + column + '" , \'-\' )', name=column)
+            column_queries.append(column3)
+        elif action == "avg":
+            column3 = PQLColumn(query='PU_AVG ( "' + CASE_TABLE + '" , "' + table + '"."' + column + '" )', name=column)
+            column_queries.append(column3)
+        elif action == "sum":
+            column3 = PQLColumn(query='PU_SUM ( "' + CASE_TABLE + '" , "' + table + '"."' + column + '" )', name=column)
+            column_queries.append(column3)
+        elif action == "":
+            column1 = PQLColumn(query='"' + table + '"."' + column + '"', name='Case_ID')
+            column_queries.append(column1)
+
+    query = PQL()
+    data_model = CELONIS.datamodels.find(DATA_MODEL)
+    # column1 = PQLColumn(query='"' + CASE_TABLE + '"."_CASE_KEY"', name='Case_ID')
+
+    for i in column_queries:
+        query += i
+
+    df = data_model._get_data_frame(query)
+    grouped = df.groupby("cluster")
+
+    def f(a):
+        l = []
+        for i in a:
+            l.append(i)
+        return l
+
+    x = grouped.agg(f)
+    print(x)
+    response = server.response_class(
+        response=json.dumps(x.to_dict(), sort_keys=False),
+        status=200,
+        mimetype='application/json'
+    )
+    return response
+
 @server.route(URL + '/table/cluster/<col_name>', methods=['GET'])
 def get_cluster(col_name):
     query = PQL()
