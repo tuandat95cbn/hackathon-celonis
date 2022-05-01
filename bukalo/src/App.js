@@ -15,7 +15,6 @@ function App() {
   const [historyCluster, setHistoryCluster] = React.useState({"1": "cluster"})
   const [clusterParams, setClusterParams] = React.useState([])
   const handleAddClusterParam = (col, clusterId, isThird = false, epls = 2, minpts = 300) => {
-    console.log(isThird)
     if (!isThird) setClusterParams(prev => [...prev, {"column": col, "clusterId": clusterId, "epls":epls,"minpts":minpts}])
     else {
       const newClusterParams = [...clusterParams]
@@ -24,11 +23,16 @@ function App() {
       setClusterParams(newClusterParams)
     }
   }
+  const handleReset = (col, clusterId, epls = 2, minpts = 300) => {
+      const newClusterParams = [...clusterParams]
+      newClusterParams[newClusterParams.length - 1] = {"column":col, "epls": epls, "minpts": minpts, "clusterId": clusterId}
+      setClusterParams(newClusterParams)
+  }
   return (
     <BrowserRouter>
       <Routes>
         <Route exact path="/" element={<Home handleAddClusterParam={handleAddClusterParam} />} />
-        <Route path="cluster" element={<Clusters clusterParams={clusterParams} handleAddClusterParam={handleAddClusterParam} />} />
+        <Route path="cluster" element={<Clusters clusterParams={clusterParams} handleAddClusterParam={handleAddClusterParam} handleResetCluster={handleReset} />} />
         <Route path="test" element={<ClusterDetail />} />
       </Routes>
     </BrowserRouter>
