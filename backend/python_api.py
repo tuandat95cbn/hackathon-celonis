@@ -28,6 +28,8 @@ activity_table_case = '"_CEL_P2P_ACTIVITIES_EN_parquet"."_CASE_KEY"'
 activity_table_activity = '"_CEL_P2P_ACTIVITIES_EN_parquet"."ACTIVITY_EN"'
 activity_table_timestamp = '"_CEL_P2P_ACTIVITIES_EN_parquet"."EVENTTIME"'
 activity_table_user_type = '"_CEL_P2P_ACTIVITIES_EN_parquet"."USER_TYPE"'
+DEFAULT_MINPTS=700
+DEFAULT_EPSL=2
 
 CELONIS = get_celonis(url=CEL_URL,
     api_token=TOKEN,
@@ -146,11 +148,16 @@ def get_throughput_time():
 
 @server.route(URL + '/table/cluster/<col_name>', methods=['GET'])
 def get_cluster(col_name):
+    args = request.args
+    epsl=DEFAULT_EPSL
+    minpts=DEFAULT_MINPTS
+    if "epsl" in args and "minpts" in args:
+        epsl=args["epls"]
+        minpts=args["minpts"]
     query = PQL()
     data_model = CELONIS.datamodels.find(DATA_MODEL)
     column1 = PQLColumn(query='"' + CASE_TABLE + '"."_CASE_KEY"', name='Case_ID')
-    column2 = PQLColumn(query='CLUSTER_VARIANTS ( VARIANT ("' + ACTIVITY_TABLE + '"."' + col_name + '" ), 700 , 2 )',
-                        name="cluster")
+    column2 = PQLColumn(query='CLUSTER_VARIANTS ( VARIANT ("' + ACTIVITY_TABLE + '"."' + col_name + '" ), '+str(minpts)+' , '+str(epsl)+' )',name="cluster")
 
     query += column1
     query += column2
@@ -176,6 +183,12 @@ def get_cluster(col_name):
 
 @server.route(URL + '/cluster-further/<column_name>', methods=['POST'])
 def get_second_cluster(column_name):
+    args = request.args
+    epsl=DEFAULT_EPSL
+    minpts=DEFAULT_MINPTS
+    if "epls" in args and "minpts" in args:
+        epsl=args["epls"]
+        minpts=args["minpts"]
     cluster_hira=request.get_json()
     cluster_querys=[]
     activities_selected_queries=[]
@@ -188,7 +201,7 @@ def get_second_cluster(column_name):
         else:
             activities_query+=" AND "
         table_col_name='"'+ACTIVITY_TABLE+'".'+'"'+cluster['column']+'"'
-        cluster_q = f'CLUSTER_VARIANTS( VARIANT ( {table_col_name} ), 2, 2 ) '
+        cluster_q = f'CLUSTER_VARIANTS( VARIANT ( {table_col_name} ),'+str(cluster['minpts']) +','+str(cluster['epls'])+ ' ) '
 
         activities_query+=f"{cluster_q} = {cluster['cluster_id']}"
         cluster_querys.append(cluster_q)
@@ -204,7 +217,7 @@ def get_second_cluster(column_name):
     drilldown_query += PQLColumn(f'VARIANT ( {activities_query} )', column_name)
     for i in range(len(cluster_querys)):
         drilldown_query += PQLColumn(f'{cluster_querys[i]}', "cluster_"+str(i))
-    drilldown_query += PQLColumn(f'CLUSTER_VARIANTS ( VARIANT ( {activities_query} ) , 2, 2)',
+    drilldown_query += PQLColumn(f'CLUSTER_VARIANTS ( VARIANT ( {activities_query} ) , '+str(minpts)+','+str(epsl)+' )',
                                  "cluster_")
     for i in range(len(cluster_querys)):
         drilldown_query += PQLFilter(f'FILTER {cluster_querys[i]} = {cluster_hira[i]["cluster_id"]};')
@@ -292,10 +305,16 @@ def get_cluster_table():
 
 @server.route(URL + '/table/add-column/<cluster_column>', methods=['POST'])
 def add_column(cluster_column):
+    args = request.args
+    epsl=DEFAULT_EPSL
+    minpts=DEFAULT_MINPTS
+    if "epsl" in args and "minpts" in args:
+        epsl=args["epls"]
+        minpts=args["minpts"]
     json_list=request.get_json()
     column_queries = []
     column2 = PQLColumn(
-        query='CLUSTER_VARIANTS ( VARIANT ("' + ACTIVITY_TABLE + '"."' + cluster_column + '" ), 2 , 2 )',
+        query='CLUSTER_VARIANTS ( VARIANT ("' + ACTIVITY_TABLE + '"."' + cluster_column + '" ), '+str(minpts)+' , '+str(epsl)+' )',
         name="cluster")
     column_queries.append(column2)
     for js in json_list:
