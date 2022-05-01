@@ -158,9 +158,13 @@ export default function Clusters({ clusterParams, handleAddClusterParam }) {
   };
   const [rows, setRows] = React.useState([])
   const getCurrentClusterCol = () => {
+    console.log(clusterParams)
     for (let i = 0; i < clusterParams.length; i++) {
-      if (clusterParams[i]['clusterId'] == 'None')
-        return clusterParams[i]['column']
+      if (clusterParams[i]['clusterId'] == 'None') {
+        if (clusterParams[i]['epls'] != undefined && clusterParams[i]['minpts'] != undefined)
+          return clusterParams[i]['column'] + "?epls=" + clusterParams[i]['epls'] + "&minpts=" + clusterParams[i]['minpts']
+        else return clusterParams[i]['column']
+      }
     }
     return null
   }
@@ -180,7 +184,9 @@ export default function Clusters({ clusterParams, handleAddClusterParam }) {
       data = data.map((e) => {
         return {
           "column": e.column,
-          "cluster_id": e.clusterId
+          "cluster_id": e.clusterId,
+          "epls":e.epls,
+          "minpts":e.minpts,
         }
       })
       axios.post(API_URL + "cluster-further/" + getCurrentClusterCol(), data)
