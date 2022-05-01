@@ -196,7 +196,7 @@ def get_second_cluster(column_name):
     '''
     drilldown_query = PQL()
     drilldown_query += PQLColumn(case_table_case, "case_id")
-    drilldown_query += PQLColumn(f'VARIANT ( {activities_query} )', "variant")
+    drilldown_query += PQLColumn(f'VARIANT ( {activities_query} )', column_name)
     for i in range(len(cluster_querys)):
         drilldown_query += PQLColumn(f'{cluster_querys[i]}', "cluster_"+str(i))
     drilldown_query += PQLColumn(f'CLUSTER_VARIANTS ( VARIANT ( {activities_query} ) , 2, 2)',
