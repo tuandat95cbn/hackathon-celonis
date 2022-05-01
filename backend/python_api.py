@@ -57,7 +57,6 @@ def test():
     a += PQLColumn(f"ESTIMATE_CLUSTER_PARAMS ( VARIANT ( {activity_table_activity} ), 3, 5, 3 )")
     data_model = CELONIS.datamodels.find(DATA_MODEL)
     df = data_model._get_data_frame(a)
-    df.to_csv(r"C:\Users\HOANG-ANH-MEED\Desktop\hack\cluster5.csv")
     return ""
 
 
@@ -143,7 +142,7 @@ def get_cluster(col_name):
     query = PQL()
     data_model = CELONIS.datamodels.find(DATA_MODEL)
     column1 = PQLColumn(query='"' + CASE_TABLE + '"."_CASE_KEY"', name='Case_ID')
-    column2 = PQLColumn(query='CLUSTER_VARIANTS ( VARIANT ("' + ACTIVITY_TABLE + '"."' + col_name + '" ), 211132 , 3 )',
+    column2 = PQLColumn(query='CLUSTER_VARIANTS ( VARIANT ("' + ACTIVITY_TABLE + '"."' + col_name + '" ), 700 , 2 )',
                         name="cluster")
 
     query += column1
@@ -159,7 +158,6 @@ def get_cluster(col_name):
         return l
 
     x = grouped.agg(f)
-
     print(x.index)
 
     response = server.response_class(
@@ -196,7 +194,7 @@ def get_second_cluster(column_name):
     '''
     drilldown_query = PQL()
     drilldown_query += PQLColumn(case_table_case, "case_id")
-    drilldown_query += PQLColumn(f'VARIANT ( {activities_query} )', "variant")
+    drilldown_query += PQLColumn(f'VARIANT ( {activities_query} )', column_name)
     for i in range(len(cluster_querys)):
         drilldown_query += PQLColumn(f'{cluster_querys[i]}', "cluster_"+str(i))
     drilldown_query += PQLColumn(f'CLUSTER_VARIANTS ( VARIANT ( {activities_query} ) , 2, 2)',
@@ -213,7 +211,7 @@ def get_second_cluster(column_name):
         mimetype='application/json'
     )
 
-    return ""
+    return response
 
 
 

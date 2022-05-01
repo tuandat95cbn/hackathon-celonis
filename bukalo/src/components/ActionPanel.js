@@ -28,19 +28,20 @@ export default function ActionPanel({setAction}) {
     setAggregate(event.target.value);
   };
   const handleClick = (event) => {
-    if (newColName != null && newColName !="" && newColName !=undefined)
-    setAction({
-      "table":table,
-      "action":aggregate,
-      "column":column,
-      "newName":newColName
-    })
+    if (newColName != null && newColName != "" && newColName != undefined)
+      setAction({
+        "table": table,
+        "action": aggregate,
+        "column": column,
+        "newName": newColName
+      })
     else {
-    setAction({
-      "table":table,
-      "action":aggregate,
-      "column":column,
-    })  }
+      setAction({
+        "table": table,
+        "action": aggregate,
+        "column": column,
+      })
+    }
     //setTable()
     //setAction()
     //setNewColName()
@@ -82,11 +83,9 @@ export default function ActionPanel({setAction}) {
           onChange={handleChangeColumn}
           label="Columns"
         >
-          {columns.map((col) => {
-
-
-            return (<MenuItem value={col}>{col}</MenuItem>)
-          })}
+          {columns.map((col) => (
+            <MenuItem key={"action"+col} value={col}>{col}</MenuItem>
+          ))}
         </Select>
       </FormControl>
       <FormControl variant="standard" sx={{m: 1, minWidth: 120}}>
@@ -107,14 +106,14 @@ export default function ActionPanel({setAction}) {
         <TextField
           id="outlined-required"
           label="New Name"
-    variant="standard"
+          variant="standard"
           onChange={handleChangeNewName}
         />
       </FormControl>
 
       <FormControl variant="standard" sx={{m: 1, minWidth: 120}}>
         <Button color="primary" variant="contained" onClick={handleClick}> Add </Button>
-    </FormControl>
+      </FormControl>
     </Paper>
   );
 }

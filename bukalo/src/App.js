@@ -13,11 +13,22 @@ import ClusterDetail from './components/ClusterDetail';
 
 function App() {
   const [historyCluster,setHistoryCluster] = React.useState({"1":"cluster"})
+  const [clusterParams,setClusterParams] = React.useState([])
+  const handleAddClusterParam=(col, clusterId, isThird=false)=>{
+    console.log(isThird)
+    if (!isThird) setClusterParams(prev => [...prev,{"column":col,"clusterId":clusterId}])
+    else {
+      const newClusterParams=[...clusterParams]
+      newClusterParams[newClusterParams.length-1]={"column":clusterParams[clusterParams.length-1]['column'],"clusterId":clusterId}
+      newClusterParams.push({"column":col,"clusterId":"None"})
+      setClusterParams(newClusterParams)
+    }
+  }
   return (
     <BrowserRouter>
       <Routes>
-      <Route exact  path="/" element={<Home  />} />
-      <Route path="cluster" element={<Clusters historyCluster={historyCluster} setHistoryCluster={setHistoryCluster} />} />
+      <Route exact  path="/" element={<Home handleAddClusterParam={handleAddClusterParam}   />} />
+      <Route path="cluster" element={<Clusters clusterParams={clusterParams} handleAddClusterParam={handleAddClusterParam}/>} />
       <Route path="test" element={<ClusterDetail />} />
     </Routes>
     </BrowserRouter>

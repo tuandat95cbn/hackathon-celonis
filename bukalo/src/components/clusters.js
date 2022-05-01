@@ -21,7 +21,8 @@ import FurtherClustering from './FurtherClustering';
 
 
 
-export default function Clusters(historyCluster) {
+export default function Clusters({clusterParams, handleAddClusterParam}) {
+  console.log(clusterParams)
   const location = useLocation();
 
   const [columns, setColumns] = React.useState([
@@ -33,6 +34,7 @@ export default function Clusters(historyCluster) {
     "column": "_CASE_KEY",
     "action": ""
   }])
+  const [clusterId, setClusterId] = React.useState()
   const [mapColName, setMapColName] = React.useState()
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
@@ -40,26 +42,51 @@ export default function Clusters(historyCluster) {
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
-
   const [clusterData, setClusterData] = React.useState()
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(+event.target.value);
     setPage(0);
   };
   const [rows, setRows] = React.useState([])
-
+  const getCurrentClusterCol = () => {
+    for (let i = 0; i < clusterParams.length; i++) {
+      if (clusterParams[i]['clusterId'] == 'None')
+        return clusterParams[i]['column']
+    }
+    return null
+  }
   React.useEffect(() => {
     setIsLoading(true)
-    axios.get(API_URL + "table/cluster/" + location.state.column)
+    if(clusterParams.length<=1)
+    axios.get(API_URL + "table/cluster/" + getCurrentClusterCol())
       .then(function (response) {
-        addBreadcrumbs(location.state.column)
         setClusterData(response.data);
         setIsLoading(false)
       })
       .catch(function (error) {
         console.log(error);
       });
-  }, [])
+    else {
+    let data=clusterParams.slice(0,-1)
+      data=data.map((e)=>{ return{
+        "column":e.column,
+          "cluster_id":e.clusterId
+      }})
+    axios.post(API_URL + "cluster-further/" + getCurrentClusterCol(),data)
+      .then(function (response) {
+        setClusterData(response.data);
+        setIsLoading(false)
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+    }
+  }, [clusterParams])
+
+  React.useEffect(() => {
+    console.log(breadcrumbs)
+    generateBreadcrumb()
+  }, [clusterParams])
 
   React.useEffect(() => {
     if (actions.length > 1) {
@@ -72,7 +99,7 @@ export default function Clusters(historyCluster) {
       setMapColName(map)
       setIsLoading(true)
       let data = actions
-      axios.post(API_URL + "table/add-column/" + location.state.column, data)
+      axios.post(API_URL + "table/add-column/" + getCurrentClusterCol(), data)
         .then(function (response) {
           setClusterData(response.data);
           setIsLoading(false)
@@ -122,28 +149,51 @@ export default function Clusters(historyCluster) {
     console.log(url)
 
   }
+  const handleFurtherClustering = (col) => {
+    handleAddClusterParam(col, clusterId,true)
+  }
   const handleAddAction = (action) => {
     setActions(prev => [...prev, action])
   }
   const [breadcrumbs, setBreadcrumbs] = React.useState([
-    <Link underline="hover" key="1" color="inherit" href="/" onClick={handleClick("/")}>
+    <Link underline="hover" key="1" color="inherit">
       Start
     </Link>,
   ]);
 
-  const addBreadcrumbs = (column) => {
-    let col = (
-      <Link
-        underline="hover"
-        key={breadcrumbs.length}
-        color="inherit"
-        href={"/" + column}
-        onClick={handleClick("/" + column)}
-      >
-        {column}
-      </Link>
-    );
-    setBreadcrumbs(prev => [...prev, col])
+  const handleClusterSelect = (clusterId) => {
+    setClusterId(clusterId)
+  }
+
+  const generateBreadcrumb = () => {
+    let newBreadcrumbs = [<Link underline="hover" key="1" color="inherit">
+      Start
+    </Link>,]
+    for (let i = 0; i < clusterParams.length; i++) {
+
+      newBreadcrumbs.push(
+        <Link
+          underline="hover"
+          key={2 * i}
+          color="inherit"
+        >
+          {clusterParams[i]['column']}
+        </Link>)
+      if (clusterParams[i]['clusterId'] !== 'None')
+        newBreadcrumbs.push(
+          <Link
+            underline="hover"
+            key={2 * i + 1}
+            color="inherit"
+          //href={"/" + name}
+          //onClick={handleClick("/" + name)}
+          >
+            Cluster-{clusterParams[i]['clusterId']}
+          </Link>
+        );
+    }
+
+    setBreadcrumbs(newBreadcrumbs)
   }
   if (isLoading) return (
     <div style={{'width': "100%", "textAlign": 'center', marginTop: 30}}>
@@ -182,7 +232,7 @@ export default function Clusters(historyCluster) {
                     .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                     .map((row) => {
                       return (
-                        <TableRow hover role="checkbox" tabIndex={-1} key={row.code}>
+                        <TableRow hover role="checkbox" tabIndex={-1} key={row.cluster} onClick={() => handleClusterSelect(row['cluster'])}>
                           {columns.map((column) => {
                             const value = row[column.id];
                             return (
@@ -210,10 +260,11 @@ export default function Clusters(historyCluster) {
             />
           </Paper>
         </Grid>
-        <Grid item xs={4} md={4}>
-          <ClusterDetail />
-          <FurtherClustering />
-        </Grid>
+        {clusterId ?
+          <Grid item xs={4} md={4}>
+            <FurtherClustering handleFurtherClustering={handleFurtherClustering} />
+          </Grid>
+          : ""}
       </Grid>
     );
 }
