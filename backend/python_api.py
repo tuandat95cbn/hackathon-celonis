@@ -57,7 +57,6 @@ def test():
     a += PQLColumn(f"ESTIMATE_CLUSTER_PARAMS ( VARIANT ( {activity_table_activity} ), 3, 5, 3 )")
     data_model = CELONIS.datamodels.find(DATA_MODEL)
     df = data_model._get_data_frame(a)
-    df.to_csv(r"C:\Users\HOANG-ANH-MEED\Desktop\hack\cluster5.csv")
     return ""
 
 
@@ -145,7 +144,7 @@ def get_cluster(col_name):
     query = PQL()
     data_model = CELONIS.datamodels.find(DATA_MODEL)
     column1 = PQLColumn(query='"' + CASE_TABLE + '"."_CASE_KEY"', name='Case_ID')
-    column2 = PQLColumn(query='CLUSTER_VARIANTS ( VARIANT ("' + ACTIVITY_TABLE + '"."' + col_name + '" ), 211132 , 3 )',
+    column2 = PQLColumn(query='CLUSTER_VARIANTS ( VARIANT ("' + ACTIVITY_TABLE + '"."' + col_name + '" ), 700 , 2 )',
                         name="cluster")
 
     query += column1
@@ -161,7 +160,6 @@ def get_cluster(col_name):
         return l
 
     x = grouped.agg(f)
-    x.to_csv(r"C:\Users\HOANG-ANH-MEED\Desktop\hack\cluster6.csv")
     print(x.index)
 
     response = server.response_class(
