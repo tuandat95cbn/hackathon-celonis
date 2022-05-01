@@ -75,8 +75,6 @@ def get_basic_stat():
     return {"cases": ca, "variants": va, "events": ev}
 
 
-
-
 @server.route(URL + '/stat/most-com-var', methods=['POST'])
 def get_most_common_var():
     df = get_cluster_table()
@@ -161,7 +159,7 @@ def get_cluster(col_name):
         return l
 
     x = grouped.agg(f)
-    x.to_csv(r"C:\Users\HOANG-ANH-MEED\Desktop\hack\cluster6.csv")
+
     print(x.index)
 
     response = server.response_class(
@@ -230,14 +228,27 @@ def get_cluster_ptree():
     net, initial_marking, final_marking = pm.algo.discovery.inductive.algorithm.apply(log)
     tree = pm.algo.discovery.inductive.algorithm.apply_tree(log)
 
-    gviz = pm.visualization.process_tree.visualizer.apply(tree)
-    # gviz.node_attr = {'color': 'blue'}
-    # gviz.edge_attr = {'color': 'blue', 'style': 'filled'}
-    file_path=os.path.join( "img", "tree")
-    gviz.render(file_path)
-    pm.visualization.process_tree.visualizer.view(gviz)
-    file_path = os.path.join("img", "tree.png")
-    return send_file(file_path, mimetype='image/png')
+    def build(tree):
+        if tree.operator is None:
+            return {"name": tree.label}
+        else:
+            d = {}
+            op = tree.operator
+            children = tree.children
+            c = []
+            for i in children:
+                c.append(build(i))
+            d['name'] = op
+            d['children'] = c
+            return d
+
+    gg = build(tree)
+    response = server.response_class(
+        response=json.dumps(gg.to_dict(), sort_keys=False),
+        status=200,
+        mimetype='application/json'
+    )
+    return response
 
 
 @server.route(URL + '/cluster-table', methods=['POST'])
