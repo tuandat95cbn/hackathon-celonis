@@ -241,12 +241,12 @@ def get_cluster_ptree():
             return d
 
     gg = build(tree)
-    response = server.response_class(
-        response=json.dumps(gg, sort_keys=False),
-        status=200,
-        mimetype='application/json'
-    )
-    return response
+    # response = server.response_class(
+    #     response=json.dumps(gg, sort_keys=False),
+    #     status=200,
+    #     mimetype='application/json'
+    # )
+    return gg
 
 
 @server.route(URL + '/cluster-table', methods=['POST'])
