@@ -98,6 +98,39 @@ def get_most_common_var():
     return {"variant": d.split(","), "count": gg}
 
 
+@server.route(URL + '/stat/throughput/cluster', methods=['POST'])
+def get_throughput_cluster_time():
+    cases = request.get_json()
+    throughput_per_cluster = PQL()
+    throughput_per_cluster += PQLColumn(
+        f'CLUSTER_VARIANTS ( VARIANT ( {activity_table_activity} ), 2, 2 ) ', "cluster"
+    )
+    throughput_per_cluster += PQLColumn(
+        f'AVG ('
+        f'  CALC_THROUGHPUT ( '
+        f'      CASE_START TO CASE_END, '
+        f'      REMAP_TIMESTAMPS ( {activity_table_timestamp}, MINUTES ) '
+        f'  ) '
+        f')',
+        "avg_throughput_time"
+    )
+    q_cases = f'FILTER {CASE_TABLE}."_CASE_KEY" IN ('
+    for i in range(0, len(cases)):
+        if i == len(cases) - 1:
+            q_cases += "'"
+            q_cases += cases[i]
+            q_cases += "'"
+        else:
+            q_cases += "'"
+            q_cases += cases[i]
+            q_cases += "'"
+            q_cases += ','
+    q_cases += ');'
+    throughput_per_cluster += PQLFilter(q_cases)
+    data_model = CELONIS.datamodels.find(DATA_MODEL)
+    df = data_model._get_data_frame(throughput_per_cluster)
+
+
 @server.route(URL + '/stat/throughput', methods=['POST'])
 def get_throughput_time():
     cases = request.get_json()
