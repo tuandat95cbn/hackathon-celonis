@@ -140,7 +140,7 @@ def get_throughput_time():
         f'AVG ('
         f'  CALC_THROUGHPUT ( '
         f'      CASE_START TO CASE_END, '
-        f'      REMAP_TIMESTAMPS ( {activity_table_timestamp}, MINUTES ) '
+        f'      REMAP_TIMESTAMPS ( {activity_table_timestamp}, DAYS ) '
         f'  ) '
         f')',
         "avg_throughput_time"
@@ -168,8 +168,11 @@ def get_throughput_time():
             d[str(i)] = 1
         else:
             d[str(i)] += 1
+
+
+    gg = {"binning": d, "avg": df['avg_throughput_time'].mean()}
     response = server.response_class(
-        response=json.dumps(d, sort_keys=False),
+        response=json.dumps(gg, sort_keys=False),
         status=200,
         mimetype='application/json'
     )
