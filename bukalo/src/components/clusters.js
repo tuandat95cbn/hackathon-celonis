@@ -44,7 +44,7 @@ export default function Clusters({clusterParams, handleAddClusterParam, handleRe
   }])
   const [clusterId, setClusterId] = React.useState()
   const [currentClusterCase, setCurrentClusterCase] = React.useState([])
-  const [mapColName, setMapColName] = React.useState()
+  const [mapColName, setMapColName] = React.useState({})
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
   const [isLoading, setIsLoading] = React.useState(true)
@@ -147,14 +147,20 @@ export default function Clusters({clusterParams, handleAddClusterParam, handleRe
         return {id: col, label: getColumnName(col), minWidth: 100}
       }))
       cols.pop()
+      for (let i = 0; i < cols.length; i++) {
+          if (Array.isArray(clusterData[cols[i]][0])){
+            mapColName[cols[i]]=Object.hasOwn(mapColName, cols[i])?"num-"+mapColName[cols[i]]:"num-"+cols[i]
+
+      }}
       let l_rows = Object.keys(clusterData[cols[0]]).map((cluster) => {
         const r = {
           "cluster": cluster,
         }
         r[cols[0]] = clusterData[cols[0]][cluster]
         for (let i = 0; i < cols.length; i++) {
-          if (Array.isArray(clusterData[cols[i]][cluster]))
+          if (Array.isArray(clusterData[cols[i]][cluster])){
             r[cols[i]] = new Set(clusterData[cols[i]][cluster]).size
+          }
           else r[cols[i]] = clusterData[cols[i]][cluster]
         }
         return r
