@@ -238,7 +238,8 @@ export default function Clusters({clusterParams, handleAddClusterParam, handleRe
             <CustomizedBreadcrumbs breadcrumbs={breadcrumbs} />
           </Grid>
           <Grid item xs={12} md={12}>
-            <ActionPanel setAction={handleAddAction} />
+      {clusterParams.length<=1?
+            <ActionPanel setAction={handleAddAction} />:""}
           </Grid>
           <Paper sx={{width: '100%', overflow: 'hidden'}}>
             <TableContainer sx={{maxHeight: 440}}>
