@@ -151,7 +151,7 @@ def get_cluster(col_name):
     args = request.args
     epsl=DEFAULT_EPSL
     minpts=DEFAULT_MINPTS
-    if "epsl" in args and "minpts" in args:
+    if "epls" in args and "minpts" in args:
         epsl=args["epls"]
         minpts=args["minpts"]
     query = PQL()
@@ -308,7 +308,7 @@ def add_column(cluster_column):
     args = request.args
     epsl=DEFAULT_EPSL
     minpts=DEFAULT_MINPTS
-    if "epsl" in args and "minpts" in args:
+    if "epls" in args and "minpts" in args:
         epsl=args["epls"]
         minpts=args["minpts"]
     json_list=request.get_json()
