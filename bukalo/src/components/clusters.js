@@ -31,8 +31,6 @@ const useStyles = makeStyles({
 
 
 export default function Clusters({clusterParams, handleAddClusterParam, handleResetCluster}) {
-  console.log(clusterParams)
-  const location = useLocation();
   const classes = useStyles();
 
   const [columns, setColumns] = React.useState([
@@ -60,7 +58,6 @@ export default function Clusters({clusterParams, handleAddClusterParam, handleRe
   };
   const [rows, setRows] = React.useState([])
   const getCurrentClusterCol = () => {
-    console.log(clusterParams)
     for (let i = 0; i < clusterParams.length; i++) {
       if (clusterParams[i]['clusterId'] == 'None') {
         if (clusterParams[i]['epls'] != undefined && clusterParams[i]['minpts'] != undefined)
@@ -181,8 +178,8 @@ export default function Clusters({clusterParams, handleAddClusterParam, handleRe
     </Link>,
   ]);
 
-  const handleReset = (col,e,m) => {
-    handleResetCluster(col,"None",e,m)
+  const handleReset = (col, e, m) => {
+    handleResetCluster(col, "None", e, m)
   }
   const handleOpenDialog = () => {
     setOpenResetDialog(true)
@@ -238,11 +235,11 @@ export default function Clusters({clusterParams, handleAddClusterParam, handleRe
             <CustomizedBreadcrumbs breadcrumbs={breadcrumbs} />
           </Grid>
           <Grid item xs={12} md={12}>
-      {clusterParams.length<=1?
-            <ActionPanel setAction={handleAddAction} />:""}
+            {clusterParams.length <= 1 ?
+              <ActionPanel setAction={handleAddAction} /> : ""}
           </Grid>
           <Paper sx={{width: '100%', overflow: 'hidden'}}>
-            <TableContainer sx={{maxHeight: 440}}>
+            <TableContainer sx={{maxHeight: 700}}>
               <Table stickyHeader aria-label="sticky table">
                 <TableHead>
                   <TableRow>
