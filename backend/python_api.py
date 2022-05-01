@@ -236,17 +236,19 @@ def get_cluster_ptree():
             c = []
             for i in children:
                 c.append(build(i))
-            d['name'] = op
+
+            d['name'] = '"' + str (op) + '"'
             d['children'] = c
             return d
 
     gg = build(tree)
-    # response = server.response_class(
-    #     response=json.dumps(gg, sort_keys=False),
-    #     status=200,
-    #     mimetype='application/json'
-    # )
-    return gg
+    print(gg)
+    response = server.response_class(
+        response=json.dumps(gg, sort_keys=False),
+        status=200,
+        mimetype='application/json'
+    )
+    return response
 
 
 @server.route(URL + '/cluster-table', methods=['POST'])
