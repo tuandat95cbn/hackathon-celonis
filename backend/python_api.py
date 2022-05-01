@@ -213,7 +213,7 @@ def get_second_cluster(column_name):
         mimetype='application/json'
     )
 
-    return ""
+    return response
 
 
 
