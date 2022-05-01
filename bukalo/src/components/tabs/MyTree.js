@@ -5,27 +5,18 @@ import { makeStyles } from '@material-ui/core/styles';
 
 const useStyles = makeStyles({
   root: {
-      position: 'relative'
+    position: 'relative'
   },
-  text: {
-      position: 'absolute',
-      top: 5,
-      left: 20,
-      height: '10%'
-  },
-  tree: {
-    position:'absolute',
-    bottom:0,
-    height: 200,
-    //height: '85%'
-  },
+  rootNodeTree: {
+    fill: 'black'
+  }
 });
 
-const MyTree = ({data}) => {
-    const classes = useStyles();
-    return (
-         <Tree data={data} orientation="vertical"/> 
-    );
+const MyTree = ({ data }) => {
+  const classes = useStyles();
+  return (
+    <Tree data={data} orientation="vertical" rootNodeClassName={classes.rootNodeTree}/>
+  );
 }
 
 export default MyTree;

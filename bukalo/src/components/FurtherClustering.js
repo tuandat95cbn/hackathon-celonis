@@ -10,7 +10,7 @@ import {API_URL} from '../constant'
 import axios from 'axios';
 const useStyles = makeStyles((theme) => ({
     root: {
-        height: '100%'
+        height: '10%'
     },
     select_box: {
         width: '100%'

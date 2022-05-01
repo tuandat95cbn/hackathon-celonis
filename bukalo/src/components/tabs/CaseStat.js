@@ -3,6 +3,7 @@ import { styled } from '@mui/material/styles';
 import { makeStyles } from '@material-ui/core/styles';
 import LinearProgress, { linearProgressClasses } from '@mui/material/LinearProgress';
 import Typography from "@material-ui/core/Typography";
+import { useEffect, useState } from "react";
 
 const useStyles = makeStyles({
     root: {
@@ -32,12 +33,20 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
     },
 }));
 
-const CaseStat = ({data}) => {
+const CaseStat = ({data, text}) => {
     const classes = useStyles();
+    const [percentage, setPercentage] = useState(data * 100);
+
+    useEffect(() => {
+        if (percentage < 1) {
+            setPercentage(1);
+        }
+    }, []);
+
     return (
         <Grid container className={classes.root}>
-            <Typography className={classes.text}>20K OF 70k CASES</Typography>
-            <BorderLinearProgress variant="determinate" value={data} />
+            <Typography className={classes.text}>{text}</Typography>
+            <BorderLinearProgress variant="determinate" value={percentage} />
         </Grid>
     );
 }

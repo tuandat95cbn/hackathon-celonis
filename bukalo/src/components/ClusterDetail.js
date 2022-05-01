@@ -5,6 +5,7 @@ import { useState } from "react";
 import { makeStyles } from '@material-ui/core/styles';
 import SecondTab from "./tabs/SecondTab";
 import ThirdTab from "./tabs/ThirdTab";
+import FirstTab from "./tabs/FirstTab";
 
 const useStyles = makeStyles((theme) => ({
     tabs: {
@@ -12,11 +13,11 @@ const useStyles = makeStyles((theme) => ({
         height: '50px'
     },
     root: {
-       
+        height: '90%'
     }
 }));
 
-const ClusterDetail = () => {
+const ClusterDetail = ({cases}) => {
     const classes = useStyles();
     const [value, setValue] = useState(1);
 
@@ -36,17 +37,15 @@ const ClusterDetail = () => {
                 function () {
                     if (value === 3) {
                         return (
-                            <ThirdTab/>
-                        )
+                            <FirstTab cases={cases}/>
+                         )
                     } else if (value === 2) {
                         return (
                             <SecondTab/>
                         )
                     } else {
                         return (
-                            <div>
-                                Item {value}
-                            </div>
+                            <ThirdTab cases={cases} />
                         )
                     }
                 }()
