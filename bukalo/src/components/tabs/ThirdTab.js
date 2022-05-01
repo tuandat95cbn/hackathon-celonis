@@ -159,9 +159,9 @@ const ThirdTab = ({cases}) => {
             setCases(res.cases);
             setEvents(res.events);
             setVariants(res.variants);
-            setIsLoading(prev=>prev+1)
+            setIsLoading(prev => prev + 1)
         });
-    }, []);
+    }, [cases]);
 
     useEffect(() => {
         const postBody = cases;
@@ -179,9 +179,12 @@ const ThirdTab = ({cases}) => {
                 }
             }
             setTreeData(x)
-            setIsLoading(prev=>prev+1)
+            setIsLoading(prev => prev + 1)
         });
-    }, []);
+    }, [cases]);
+    React.useEffect(() => {
+        setIsLoading(0)
+    }, [cases])
     if (isLoading < 2) return (
         <div style={{'width': "100%", "textAlign": 'center', marginTop: 30}}>
             <CircularProgress />

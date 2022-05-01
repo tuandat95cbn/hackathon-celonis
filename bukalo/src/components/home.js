@@ -14,12 +14,17 @@ import TextField from '@mui/material/TextField';
 import {DATA_SET} from '../constant';
 const useStyles = makeStyles((theme) => ({
   box_center: {
-    marginTop: '400px',
+    marginTop: '20%',
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
   },
-}));
+  header:{
+    "& #header":{
+    marginBottom: "100px",
+
+  }
+}}));
 export default function Home({handleAddClusterParam}) {
   const classes = useStyles()
   const [column, setColumn] = React.useState('');
@@ -64,9 +69,11 @@ export default function Home({handleAddClusterParam}) {
       }}
         justifyContent="center"
       >
-        <Typography align="center" variant="h5" component="h5">
+    <div className={classes.header}>
+        <Typography id="header" align="center" variant="h3" component="h3">
           Bukalo
         </Typography>
+    </div>
         <FormControl fullWidth>
           <InputLabel id="demo-simple-select-label">Column</InputLabel>
           <Select
@@ -103,7 +110,7 @@ export default function Home({handleAddClusterParam}) {
             margin="normal"
             onChange={handleChangeMinpts}
           />
-          <Button disabled={isDisable} onClick={handleClick}>Go</Button>
+          <Button disabled={isDisable} variant="contained" onClick={handleClick}>Go</Button>
         </FormControl>
       </Box>
     </div>

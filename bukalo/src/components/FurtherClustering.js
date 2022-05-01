@@ -10,6 +10,7 @@ import TextField from '@mui/material/TextField';
 import InputLabel from '@mui/material/InputLabel';
 import FormControl from '@mui/material/FormControl';
 import {API_URL} from '../constant'
+import Typography from '@mui/material/Typography';
 import axios from 'axios';
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -57,6 +58,10 @@ const FurtherClustering = ({handleFurtherClustering}) => {
 
     return (
         <Grid container justifyContent={'center'} alignContent={'space-around'} className={classes.root}>
+            <Typography align="center" variant="h5" component="h5">
+                Further Clustering
+            </Typography>
+
             <Grid item xs={12}>
                 <FormControl fullWidth>
                     <InputLabel id="demo-simple-select-label">Column</InputLabel>

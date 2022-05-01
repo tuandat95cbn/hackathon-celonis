@@ -43,6 +43,7 @@ export default function Clusters({clusterParams, handleAddClusterParam, handleRe
     "action": ""
   }])
   const [clusterId, setClusterId] = React.useState()
+  const [currentClusterCase, setCurrentClusterCase] = React.useState([])
   const [mapColName, setMapColName] = React.useState()
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
@@ -103,6 +104,13 @@ export default function Clusters({clusterParams, handleAddClusterParam, handleRe
     generateBreadcrumb()
   }, [clusterParams])
 
+  React.useEffect(() => {
+    if (clusterId!= undefined){
+      console.log(clusterId)
+      console.log(clusterData["Case_ID"][clusterId])
+    setCurrentClusterCase(clusterData["Case_ID"][clusterId])
+
+  }}, [clusterId])
   React.useEffect(() => {
     if (actions.length > 1) {
       let map = {}
@@ -292,7 +300,7 @@ export default function Clusters({clusterParams, handleAddClusterParam, handleRe
 
         {clusterId ?
           <Grid container item xs={4} md={4} className={classes.drawer}>
-            <ClusterDetail cases={clusterData["Case_ID"][clusterId]} />
+            <ClusterDetail cases={currentClusterCase} clusterId={clusterId} />
             <FurtherClustering handleFurtherClustering={handleFurtherClustering} />
           </Grid>
           : ""}
