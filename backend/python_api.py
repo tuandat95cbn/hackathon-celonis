@@ -242,7 +242,7 @@ def get_cluster_ptree():
 
     gg = build(tree)
     response = server.response_class(
-        response=json.dumps(gg.to_dict(), sort_keys=False),
+        response=json.dumps(gg, sort_keys=False),
         status=200,
         mimetype='application/json'
     )
