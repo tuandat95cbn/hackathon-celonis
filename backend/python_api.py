@@ -215,7 +215,7 @@ def get_second_cluster(column_name):
 
 
 
-@server.route(URL + '/cluster-ptree', methods=['GET'])
+@server.route(URL + '/cluster-ptree', methods=['POST'])
 def get_cluster_ptree():
     df = get_cluster_table()
     df.rename(columns={"_TIME": 'time:timestamp',
