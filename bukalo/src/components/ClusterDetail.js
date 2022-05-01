@@ -28,9 +28,8 @@ const ClusterDetail = ({cases}) => {
         <Grid container justifyContent={'center'} alignContent={'flex-start'} className={classes.root}>
             <Grid container>
                 <Tabs value={value} onChange={handleChange} variant={'fullWidth'} className={classes.tabs}>
-                    <Tab label="Item1" value={1} />
-                    <Tab label="Item2" value={2} />
-                    <Tab label="Item3" value={3} />
+                    <Tab label="Basic Stats" value={1} />
+                    <Tab label="Process Tree" value={2} />
                 </Tabs>
             </Grid>
             {
@@ -39,7 +38,7 @@ const ClusterDetail = ({cases}) => {
                         return (
                             <FirstTab cases={cases}/>
                          )
-                    } else if (value === 2) {
+                    } else if (value === 3) {
                         return (
                             <SecondTab/>
                         )
