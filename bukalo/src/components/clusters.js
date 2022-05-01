@@ -21,6 +21,7 @@ import FurtherClustering from './FurtherClustering';
 import {makeStyles} from '@material-ui/core';
 import Button from '@mui/material/Button';
 import ResetDialog from "./ResetDialog"
+import CustomizedStepper from './CustomizedStepper';
 
 const useStyles = makeStyles({
   drawer: {
@@ -101,7 +102,7 @@ export default function Clusters({clusterParams, handleAddClusterParam, handleRe
   }, [clusterParams])
 
   React.useEffect(() => {
-    generateBreadcrumb()
+    generateSteps()
   }, [clusterParams])
 
   React.useEffect(() => {
@@ -186,11 +187,7 @@ export default function Clusters({clusterParams, handleAddClusterParam, handleRe
   const handleAddAction = (action) => {
     setActions(prev => [...prev, action])
   }
-  const [breadcrumbs, setBreadcrumbs] = React.useState([
-    <Link underline="hover" key="1" color="inherit">
-      Start
-    </Link>,
-  ]);
+  const [steps, setSteps] = React.useState(["Start"]);
 
   const handleReset = (col, e, m) => {
     handleResetCluster(col, "None", e, m)
@@ -205,35 +202,23 @@ export default function Clusters({clusterParams, handleAddClusterParam, handleRe
     setClusterId(clusterId)
   }
 
-  const generateBreadcrumb = () => {
-    let newBreadcrumbs = [<Link underline="hover" key="1" color="inherit">
-      Start
-    </Link>,]
+  const generateSteps = () => {
+    let newBreadcrumbs = [
+      "Start"
+    ]
     for (let i = 0; i < clusterParams.length; i++) {
 
       newBreadcrumbs.push(
-        <Link
-          underline="hover"
-          key={2 * i}
-          color="inherit"
-        >
-          {clusterParams[i]['column']}
-        </Link>)
+          clusterParams[i]['column']
+        )
       if (clusterParams[i]['clusterId'] !== 'None')
         newBreadcrumbs.push(
-          <Link
-            underline="hover"
-            key={2 * i + 1}
-            color="inherit"
-          //href={"/" + name}
-          //onClick={handleClick("/" + name)}
-          >
-            Cluster-{clusterParams[i]['clusterId']}
-          </Link>
+
+            "Cluster-"+clusterParams[i]['clusterId']
         );
     }
 
-    setBreadcrumbs(newBreadcrumbs)
+    setSteps(newBreadcrumbs)
   }
   if (isLoading) return (
     <div style={{'width': "100%", "textAlign": 'center', marginTop: 30}}>
@@ -246,7 +231,7 @@ export default function Clusters({clusterParams, handleAddClusterParam, handleRe
       <Grid container spacing={2}>
         <Grid item xs={6} md={8}>
           <Grid item xs={12} md={12}>
-            <CustomizedBreadcrumbs breadcrumbs={breadcrumbs} />
+            <CustomizedStepper steps={steps} />
           </Grid>
           <Grid item xs={12} md={12}>
             {clusterParams.length <= 1 ?
