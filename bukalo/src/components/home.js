@@ -19,7 +19,7 @@ const useStyles = makeStyles((theme) => ({
     justifyContent: "center",
   },
 }));
-export default function Home() {
+export default function Home({handleAddClusterParam}) {
   const classes = useStyles()
   const [column, setColumn] = React.useState('');
   const [isDisable, setIsDisable] = React.useState(true);
@@ -29,7 +29,8 @@ export default function Home() {
   const [candidates, setCandidates] = React.useState([])
   let navigate = useNavigate();
   const handleClick = (event) => {
-    navigate("/cluster", {state: {"column": column}});
+    handleAddClusterParam(column,"None")
+    navigate("/cluster");
   }
   useEffect(() => {
     if (column) setIsDisable(false)
@@ -68,7 +69,7 @@ export default function Home() {
             onChange={handleChange}
           >
             {candidates.map((candidate) =>
-              <MenuItem value={candidate}>{candidate}</MenuItem>
+              <MenuItem key={"home"+candidate} value={candidate}>{candidate}</MenuItem>
             )
 
             }
