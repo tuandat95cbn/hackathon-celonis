@@ -49,7 +49,7 @@ const useStyles = makeStyles({
     }
 });
 
-const total_cases = 279000;
+const total_cases = 279020;
 const total_events = 1310947;
 const total_variants = 21;
 
@@ -152,6 +152,7 @@ const ThirdTab = ({cases}) => {
     const [eventsNumber, setEvents] = useState(0);
     const [variantsNumber, setVariants] = useState(0);
     const [treeData, setTreeData] = useState({});
+    const [avgThroughputTime, setAvgThroughputTime] = useState(0);
 
     useEffect(() => {
         const postBody = cases;
@@ -217,9 +218,9 @@ const ThirdTab = ({cases}) => {
                 </Grid>
                 <Grid container className={clsx(classes.borderBottom, classes.graphContainer)}>
                     <Grid container item xs={12} justifyContent={'center'} className={classes.graphText}>
-                        <Typography>Average Throughput Time: 20 days</Typography>
+                        <Typography>Average Throughput Time: {Math.round(avgThroughputTime * 10) / 10} days</Typography>
                     </Grid>
-                    <TimeDistribution cases={cases} />
+                    <TimeDistribution cases={cases} setAvgThroughputTime={setAvgThroughputTime}/>
                 </Grid>
             </Grid>
         )

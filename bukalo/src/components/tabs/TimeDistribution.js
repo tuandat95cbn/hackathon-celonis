@@ -3,20 +3,21 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_URL } from '../../constant';
 
-const TimeDistribution = ({ cases }) => {
+const TimeDistribution = ({ cases, setAvgThroughputTime }) => {
     const [time, setTime] = useState([]);
 
     useEffect(() => {
         const postBody = cases;
         axios.post(API_URL + '/stat/throughput', postBody).then(res => (res.data)).then(res => {
             let temp = [];
-            for (const [key, value] of Object.entries(res)) {
+            for (const [key, value] of Object.entries(res.binning)) {
                 temp.push({ x: key, y: value });
             }
             setTime([{ id: 'test', color: "hsl(175, 70%, 50%)", data: temp}]);
+            setAvgThroughputTime(res.avg)
         });
     }, []);
-    
+
     return (
         <ResponsiveLine
             data={time}

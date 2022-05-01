@@ -39,14 +39,10 @@ const ClusterDetail = ({cases,clusterId}) => {
             </Grid>
             {
                 function () {
-                    if (value === 3) {
+                    if (value === 2) {
                         return (
-                            <FirstTab cases={cases} />
-                        )
-                    } else if (value === 3) {
-                        return (
-                            <SecondTab />
-                        )
+                            <FirstTab cases={cases}/>
+                         )
                     } else {
                         return (
                             <ThirdTab cases={cases} />
