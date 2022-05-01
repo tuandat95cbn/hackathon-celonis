@@ -98,12 +98,17 @@ def get_most_common_var():
     return {"variant": d.split(","), "count": gg}
 
 
-@server.route(URL + '/stat/throughput/cluster', methods=['POST'])
+@server.route(URL + '/stat/throughput/cluster', methods=['GET'])
 def get_throughput_cluster_time():
-    cases = request.get_json()
+    args = request.args
+    epsl = DEFAULT_EPSL
+    minpts = DEFAULT_MINPTS
+    if "epls" in args and "minpts" in args:
+        epsl = args["epls"]
+        minpts = args["minpts"]
     throughput_per_cluster = PQL()
     throughput_per_cluster += PQLColumn(
-        f'CLUSTER_VARIANTS ( VARIANT ( {activity_table_activity} ), 2, 2 ) ', "cluster"
+        f'CLUSTER_VARIANTS ( VARIANT ( {activity_table_activity} ), {minpts}, {epsl} ) ', "cluster"
     )
     throughput_per_cluster += PQLColumn(
         f'AVG ('
@@ -114,21 +119,14 @@ def get_throughput_cluster_time():
         f')',
         "avg_throughput_time"
     )
-    q_cases = f'FILTER {CASE_TABLE}."_CASE_KEY" IN ('
-    for i in range(0, len(cases)):
-        if i == len(cases) - 1:
-            q_cases += "'"
-            q_cases += cases[i]
-            q_cases += "'"
-        else:
-            q_cases += "'"
-            q_cases += cases[i]
-            q_cases += "'"
-            q_cases += ','
-    q_cases += ');'
-    throughput_per_cluster += PQLFilter(q_cases)
     data_model = CELONIS.datamodels.find(DATA_MODEL)
     df = data_model._get_data_frame(throughput_per_cluster)
+    response = server.response_class(
+        response=json.dumps(df.to_dict(), sort_keys=False),
+        status=200,
+        mimetype='application/json'
+    )
+    return response
 
 
 @server.route(URL + '/stat/throughput', methods=['POST'])
