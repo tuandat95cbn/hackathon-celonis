@@ -127,9 +127,16 @@ def get_throughput_time():
     throughput_per_cluster += PQLFilter(q_cases)
     data_model = CELONIS.datamodels.find(DATA_MODEL)
     df = data_model._get_data_frame(throughput_per_cluster)
-
+    t = pd.cut(df['avg_throughput_time'], bins=20)
+    d = {}
+    for i in t:
+        print(str(i))
+        if str (i) not in d:
+            d[str(i)] = 1
+        else:
+            d[str(i)] += 1
     response = server.response_class(
-        response=json.dumps(df.to_dict(), sort_keys=False),
+        response=json.dumps(d, sort_keys=False),
         status=200,
         mimetype='application/json'
     )
