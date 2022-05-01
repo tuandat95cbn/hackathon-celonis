@@ -83,19 +83,19 @@ export default function ResetDialog({open, handleReset, handleClose}) {
               id="epls"
               label="Epls"
               defaultValue={2}
-              value={minpts}
+              value={epls}
               margin="normal"
-              onChange={handleChangeMinpts}
+              onChange={handleChangeEpls}
             />
           </FormControl>
           <FormControl fullWidth>
             <TextField
-              id="epls"
+              id="minpts"
               label="Minpts"
               defaultValue={300}
-              value={epls}
+              value={minpts}
               margin="normal"
-              onChange={handleChangeEpls}
+              onChange={handleChangeMinpts}
             />
           </FormControl>
 

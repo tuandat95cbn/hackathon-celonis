@@ -32,7 +32,7 @@ export default function Home({handleAddClusterParam}) {
   const [candidates, setCandidates] = React.useState([])
   let navigate = useNavigate();
   const handleClick = (event) => {
-    handleAddClusterParam(column, "None")
+    handleAddClusterParam(column, "None", false, epls, minpts)
     navigate("/cluster");
   }
   useEffect(() => {
@@ -89,19 +89,19 @@ export default function Home({handleAddClusterParam}) {
             id="epls"
             label="Epls"
             defaultValue={2}
-            value={minpts}
+            value={epls}
             margin="normal"
-            onChange={handleChangeMinpts}
+            onChange={handleChangeEpls}
           />
         </FormControl>
         <FormControl fullWidth>
           <TextField
-            id="epls"
+            id="minpts"
             label="Minpts"
             defaultValue={300}
-            value={epls}
+            value={minpts}
             margin="normal"
-            onChange={handleChangeEpls}
+            onChange={handleChangeMinpts}
           />
           <Button disabled={isDisable} onClick={handleClick}>Go</Button>
         </FormControl>

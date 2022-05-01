@@ -167,8 +167,10 @@ export default function Clusters({clusterParams, handleAddClusterParam, handleRe
     console.log(url)
 
   }
-  const handleFurtherClustering = (col) => {
-    handleAddClusterParam(col, clusterId, true)
+  const handleFurtherClustering = (col, epls, minpts) => {
+    console.log(col, epls, minpts)
+    handleAddClusterParam(col, clusterId, true, epls, minpts)
+    setClusterId()
   }
   const handleAddAction = (action) => {
     setActions(prev => [...prev, action])
@@ -179,7 +181,7 @@ export default function Clusters({clusterParams, handleAddClusterParam, handleRe
     </Link>,
   ]);
 
-  const handleReset = (col,m,e) => {
+  const handleReset = (col,e,m) => {
     handleResetCluster(col,"None",e,m)
   }
   const handleOpenDialog = () => {
